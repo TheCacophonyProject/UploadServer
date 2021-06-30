@@ -63,7 +63,7 @@
   },
   "scripts": {
     "lint": "eslint --ignore-pattern 'dynamic-import-esm.js' --ignore-path .gitignore .",
-    "lint:fix": "eslint --fix --ignore-pattern 'dynamic-import-esm.js' --ignore-path .gitignore .",
+    "lint:fix": "eslint --fix --ignore-pattern 'dynamic-import-esm.js' --ignore-path .gitignore . && ./beautify.sh",
     "apidoc": "apidoc -i api/V1/ -o apidoc/",
     "db-migrate": "sequelize db:migrate",
     "new-migration": "sequelize migration:generate --name",

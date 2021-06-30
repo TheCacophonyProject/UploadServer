@@ -7,6 +7,9 @@ language: node_js
 node_js:
   - "lts/*"
 
+env:
+  - IS_CI_ENV=true
+
 python:
   - "3.6.1"
 
