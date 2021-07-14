@@ -154,7 +154,9 @@ function makeRecordingDataFromDetails(
   if (details.lat && details.lng) {
     data.location = [details.lat, details.lng];
   }
-
+  if (details.processingState) {
+    data.processingState = details.processingState;
+  }
   return data;
 }
 

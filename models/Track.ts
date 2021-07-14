@@ -21,7 +21,6 @@ import { ModelCommon, ModelStaticCommon } from "./index";
 import { TrackTag, TrackTagId, AI_MASTER } from "./TrackTag";
 import { User } from "./User";
 import { Recording } from "./Recording";
-import { AlertStatic } from "./Alert";
 
 export type TrackId = number;
 export interface Track extends Sequelize.Model, ModelCommon<Track> {
@@ -109,25 +108,6 @@ export default function (
     });
   };
 
-  //---------------
-  // INSTANCE
-  //---------------
-  async function sendAlerts(track: Track, tag: TrackTag) {
-    if (tag.automatic && tag.data.name != AI_MASTER) {
-      return;
-    }
-
-    const recording = await track.getRecording();
-    const alerts = await (models.Alert as AlertStatic).getActiveAlerts(
-      recording.DeviceId,
-      tag
-    );
-    for (const alert of alerts) {
-      await alert.sendAlert(recording, track, tag);
-    }
-    return alerts;
-  }
-
   // Adds a tag to a track and checks if any alerts need to be sent. All trackTags
   // should be added this way
   Track.prototype.addTag = async function (
@@ -144,7 +124,6 @@ export default function (
       data: data,
       UserId: userId
     });
-    await sendAlerts(this, tag);
     return tag;
   };
   // Return a specific track tag for the track.

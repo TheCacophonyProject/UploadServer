@@ -9,6 +9,22 @@ export const EventTypes = {
   STOP_REPORTED: "stop-reported"
 };
 
+Cypress.Commands.add("apiGetEvents", (user, camera, eventType) => {
+  logTestDescription(`Get events for ${camera} of type ${eventType}`, {
+    user,
+    camera,
+    eventType
+  });
+  const params = {
+    deviceId: getCreds(camera).id,
+    type: eventType
+  };
+  makeAuthorizedRequest(
+    { method: "GET", url: v1ApiPath("events", params) },
+    user
+  );
+});
+
 Cypress.Commands.add(
   "checkPowerEvents",
   (user: string, camera: string, expectedEvent: ComparablePowerEvent) => {

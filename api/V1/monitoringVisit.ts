@@ -105,7 +105,7 @@ class Visit {
       tracks: []
     };
     for (const track of (recording as any).Tracks) {
-      const bestTag = getTrackTag(track.TrackTags, 0);
+      const bestTag = getTrackTag(track.TrackTags);
       let aiTag = [];
       if (track.TrackTags) {
         aiTag = track.TrackTags.filter((tag) => tag.data == aiModel);

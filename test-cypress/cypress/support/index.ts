@@ -9,6 +9,7 @@ import "../commands/api/recordings";
 import "../commands/api/monitoring";
 import "../commands/api/stations";
 import "../commands/api/visits";
+import "../commands/api/alerts";
 
 beforeEach(function () {
   // This runs before each test file, eg once per file.

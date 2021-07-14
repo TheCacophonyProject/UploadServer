@@ -30,12 +30,9 @@ const Op = Sequelize.Op;
 
 export interface AlertCondition {
   tag: string;
-  automatic: boolean;
 }
 export function isAlertCondition(condition: any) {
-  return (
-    condition.hasOwnProperty("tag") && condition.hasOwnProperty("automatic")
-  );
+  return condition.hasOwnProperty("tag");
 }
 
 export interface Alert extends Sequelize.Model, ModelCommon<Alert> {
@@ -148,11 +145,7 @@ export default function (sequelize, DataTypes): AlertStatic {
     conditions: AlertCondition[],
     trackTag: TrackTag
   ): boolean {
-    return conditions.some(
-      (condition) =>
-        condition.tag == trackTag.what &&
-        condition.automatic == trackTag.automatic
-    );
+    return conditions.some((condition) => condition.tag == trackTag.what);
   }
 
   // get all alerts for this device that satisfy the what condition and have

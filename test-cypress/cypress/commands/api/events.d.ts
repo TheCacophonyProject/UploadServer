@@ -5,6 +5,12 @@ interface ComparablePowerEvent {
 
 declare namespace Cypress {
   interface Chainable {
+    apiGetEvents(
+      user: string,
+      camera: string,
+      eventType: string
+    ): Chainable<Element>;
+
     /**
      * check the this device is reported as stopped or not
      *

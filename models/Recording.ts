@@ -280,6 +280,7 @@ export interface RecordingStatic extends ModelStaticCommon<Recording> {
     [RecordingType.Audio]: string[];
   };
   uploadedState: (type: RecordingType) => RecordingProcessingState;
+  finishedState: (type: RecordingType) => RecordingProcessingState;
 
   getOneForProcessing: (
     type: RecordingType,
@@ -311,8 +312,9 @@ export interface RecordingStatic extends ModelStaticCommon<Recording> {
     id: RecordingId,
     options?: getOptions
   ) => Promise<Recording>;
-  getNextState: () => String;
 
+  getForAdmin: (id: RecordingId) => Promise<Recording>;
+  getNextState: () => String;
   //findAll: (query: FindOptions) => Promise<Recording[]>;
 }
 
@@ -525,6 +527,25 @@ export default function (
     recording.filterData(
       Recording.makeFilterOptions(user, options.filterOptions)
     );
+    return recording;
+  };
+
+  /**
+   * Return a single recording for an admin.
+   */
+  Recording.getForAdmin = async function (id) {
+    const query = {
+      where: {
+        id: id
+      },
+      include: getRecordingInclude(),
+      attributes: this.queryGetAttributes.concat(["rawFileKey"])
+    };
+
+    const recording = await this.findOne(query);
+    if (!recording) {
+      return null;
+    }
     return recording;
   };
 
@@ -780,7 +801,7 @@ from (
     const jobs = Recording.processingStates[this.type];
     let nextState;
     if (this.processingState == RecordingProcessingState.Reprocess) {
-      nextState = jobs[jobs.length - 1];
+      nextState = Recording.finishedState(this.type);
     } else {
       const job_index = jobs.indexOf(this.processingState);
       if (job_index == -1) {
@@ -1449,7 +1470,13 @@ from (
       return RecordingProcessingState.AnalyseThermal;
     }
   };
-
+  Recording.finishedState = function (type: RecordingType) {
+    if (type == RecordingType.Audio) {
+      return RecordingProcessingState.Finished;
+    } else {
+      return RecordingProcessingState.Finished;
+    }
+  };
   Recording.processingAttributes = [
     "id",
     "type",

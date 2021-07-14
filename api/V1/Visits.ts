@@ -49,10 +49,7 @@ function sortTracks(tracks: Track[]) {
 
 // getTrackTag from all tags return a single tag by precedence:
 // this users tag, or any other humans tag, else the original AI
-export function getTrackTag(
-  trackTags: TrackTag[],
-  userID: number
-): TrackTag | null {
+export function getTrackTag(trackTags: TrackTag[]): TrackTag | null {
   if (trackTags.length == 0) {
     return null;
   }
@@ -112,7 +109,7 @@ class DeviceSummary {
         );
         this.deviceMap[rec.DeviceId] = devVisits;
       }
-      devVisits.calculateNewVisits(rec, queryOffset + i, complete, userID);
+      devVisits.calculateNewVisits(rec, queryOffset + i, complete);
     }
   }
   earliestIncompleteOffset(): number | null {
@@ -308,8 +305,7 @@ class DeviceVisits {
   calculateNewVisits(
     rec: any,
     queryOffset: number,
-    complete: boolean = false,
-    userID: number
+    complete: boolean = false
   ): Visit[] {
     sortTracks(rec.Tracks);
     if (rec.Tracks.length == 0) {
@@ -319,13 +315,13 @@ class DeviceVisits {
     const trackPeriod = new TrackStartEnd(rec, rec.Tracks[0]);
     const currentVisit = this.currentVisit();
     if (currentVisit && currentVisit.isPartOfVisit(trackPeriod.trackStart)) {
-      currentVisit.addRecording(rec, userID);
+      currentVisit.addRecording(rec);
       currentVisit.queryOffset = queryOffset;
     } else {
       if (currentVisit) {
         currentVisit.completeVisit();
       }
-      const visit = new Visit(rec, userID, queryOffset);
+      const visit = new Visit(rec, queryOffset);
       this.visits.push(visit);
       this.visitCount++;
     }
@@ -363,7 +359,7 @@ class Visit {
   audioBaitEvents: Event[];
   complete: boolean;
   tagCount: any;
-  constructor(rec: any, userID: number, public queryOffset: number) {
+  constructor(rec: any, public queryOffset: number) {
     visitID += 1;
     this.tagCount = {};
     this.visitID = visitID;
@@ -375,7 +371,7 @@ class Visit {
     this.audioBaitVisit = false;
     this.audioBaitDay = false;
     this.complete = false;
-    this.addRecording(rec, userID);
+    this.addRecording(rec);
   }
 
   mostCommonTag(): TrackTag | null {
@@ -409,6 +405,7 @@ class Visit {
     }
     return null;
   }
+
   completeVisit() {
     // assign the visit a tag based on the most common tag that isn't unidentified
     const trackTag = this.mostCommonTag();
@@ -420,9 +417,9 @@ class Visit {
     this.complete = true;
   }
 
-  addRecording(rec: any, userID: number) {
+  addRecording(rec: any) {
     for (const track of rec.Tracks) {
-      const taggedAs = getTrackTag(track.TrackTags, userID);
+      const taggedAs = getTrackTag(track.TrackTags);
       const event = new VisitEvent(rec, track, null, taggedAs);
       this.addEvent(event);
     }

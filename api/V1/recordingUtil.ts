@@ -15,7 +15,8 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+import { AlertStatic } from "../../models/Alert";
+import { AI_MASTER } from "../../models/TrackTag";
 import jsonwebtoken from "jsonwebtoken";
 import mime from "mime";
 import moment from "moment";
@@ -45,7 +46,8 @@ import {
   DeviceVisitMap,
   Visit,
   VisitEvent,
-  VisitSummary
+  VisitSummary,
+  getTrackTag
 } from "./Visits";
 import { Station } from "../../models/Station";
 import modelsUtil from "../../models/util/util";
@@ -236,6 +238,12 @@ function makeUploadHandler(mungeData?: (any) => any) {
     }
     if (data.processingState) {
       recording.processingState = data.processingState;
+      if (
+        recording.processingState ==
+        models.Recording.finishedState(data.type as RecordingType)
+      ) {
+        await sendAlerts(recording.id);
+      }
     } else {
       if (!fileIsCorrupt) {
         recording.processingState = models.Recording.uploadedState(
@@ -1098,6 +1106,37 @@ function addAudioBaitRow(out: any, audioBait: Event) {
     ""
   ]);
 }
+
+async function sendAlerts(recID: number) {
+  const recording = (await models.Recording.getForAdmin(recID)) as any;
+  const recVisit = new Visit(recording, 0);
+  recVisit.completeVisit();
+  let matchedTrack, matchedTag;
+  // find any ai master tags that match the visit tag
+  for (const track of recording.Tracks) {
+    matchedTag = track.TrackTags.find(
+      (tag) => tag.data == AI_MASTER && recVisit.what == tag.what
+    );
+    if (matchedTag) {
+      matchedTrack = track;
+      break;
+    }
+  }
+  if (!matchedTag) {
+    return;
+  }
+
+  const alerts = await (models.Alert as AlertStatic).getActiveAlerts(
+    recording.DeviceId,
+    matchedTag
+  );
+
+  for (const alert of alerts) {
+    await alert.sendAlert(recording, matchedTrack, matchedTag);
+  }
+  return alerts;
+}
+
 export default {
   makeUploadHandler,
   query,
@@ -1109,5 +1148,6 @@ export default {
   reprocessAll,
   tracksFromMeta,
   updateMetadata,
-  queryVisits
+  queryVisits,
+  sendAlerts
 };
